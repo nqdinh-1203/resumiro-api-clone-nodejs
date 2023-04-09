@@ -7,6 +7,8 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT;
 
+app.use(express.json());
+
 route(app);
 
 app.listen(port, () => {

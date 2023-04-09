@@ -49,16 +49,14 @@ model candidates_skills {
 }
 
 model experiences {
-    id           Int         @id(map: "pk_experiences") @default(autoincrement())
-    position     String      @db.VarChar(100)
-    start        String      @db.VarChar(50)
-    finish       String      @db.VarChar(50)
-    company_id   Int
-    candidate_id Int
-    candidates   candidates? @relation(fields: [candidatesId], references: [id])
-    candidatesId Int?
-    companies    companies?  @relation(fields: [companiesId], references: [id])
-    companiesId  Int?
+    id         Int        @id(map: "pk_experiences") @default(autoincrement())
+    position   String     @db.VarChar(100)
+    start      String     @db.VarChar(50)
+    finish     String     @db.VarChar(50)
+    company_id Int
+    user_id    Int
+    candidates candidates @relation(fields: [user_id], references: [id])
+    companies  companies  @relation(fields: [company_id], references: [id])
 }
 
 model jobs {
