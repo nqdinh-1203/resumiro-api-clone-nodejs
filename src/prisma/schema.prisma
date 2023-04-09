@@ -1,0 +1,175 @@
+generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["fullTextSearch", "fullTextIndex"]
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum roles {
+    candidate
+    recruiter
+}
+
+model allowed_recruiters_resumes {
+    recruiter_id Int
+    resume_id    Int
+
+    @@id([recruiter_id, resume_id], map: "pk_allowed_recuiters_resumes")
+}
+
+model candidates {
+    id               Int                 @id(map: "pk_candidates") @default(autoincrement())
+    username         String              @db.VarChar(50)
+    password         String              @db.VarChar(100)
+    avatar           String?             @db.VarChar(1000)
+    background       String?             @db.VarChar(1000)
+    address_wallet   String              @unique @db.VarChar(100)
+    full_name        String?             @db.VarChar(100)
+    email            String?             @db.VarChar(100)
+    phone            String?             @db.VarChar(100)
+    about            String?             @db.VarChar(5000)
+    role             roles
+    candidate_skills candidates_skills[]
+    jobs_applicants  jobs_applicants[]
+    resumes          resumes[]
+    certificates     certificates[]
+    experiences      experiences[]
+}
+
+model candidates_skills {
+    candidate_id Int
+    skill_id     Int
+    candidate    candidates @relation(fields: [candidate_id], references: [id])
+    skill        skills     @relation(fields: [skill_id], references: [id])
+
+    @@id([candidate_id, skill_id], map: "pk_candidates_skills")
+}
+
+model experiences {
+    id           Int         @id(map: "pk_experiences") @default(autoincrement())
+    position     String      @db.VarChar(100)
+    start        String      @db.VarChar(50)
+    finish       String      @db.VarChar(50)
+    company_id   Int
+    candidate_id Int
+    candidates   candidates? @relation(fields: [candidatesId], references: [id])
+    candidatesId Int?
+    companies    companies?  @relation(fields: [companiesId], references: [id])
+    companiesId  Int?
+}
+
+model jobs {
+    id             Int               @id(map: "pk_jobs") @default(autoincrement())
+    title          String            @db.VarChar(100)
+    location_id    Int
+    job_type       String            @db.VarChar(100)
+    experience     Int
+    requirements   String?           @db.VarChar(1000)
+    benefits       String?           @db.VarChar(1000)
+    create_at      DateTime          @db.Timestamp(6)
+    update_at      DateTime?         @db.Timestamp(6)
+    company_id     Int
+    salary         Int
+    field_id       Int
+    owner_id       Int
+    owner          recruiters        @relation(fields: [owner_id], references: [id])
+    field          fields            @relation(fields: [field_id], references: [id])
+    company        companies         @relation(fields: [company_id], references: [id])
+    location       locations         @relation(fields: [location_id], references: [id])
+    jobs_applcants jobs_applicants[]
+    jobs_skills    jobs_skills[]
+}
+
+model companies {
+    id           Int           @id(map: "pk_companies") @default(autoincrement())
+    name         String        @db.VarChar(100)
+    logo         String        @db.VarChar(1000)
+    background   String        @db.VarChar(1000)
+    about        String        @db.VarChar(1000)
+    scale        String?       @db.VarChar(100)
+    website      String?       @db.VarChar(1000)
+    location_id  Int
+    // tạo khóa ngoại
+    location     locations     @relation(fields: [location_id], references: [id])
+    address      String?       @db.VarChar(100)
+    introduction String?       @db.VarChar(1000)
+    jobs         jobs[]
+    recruiters   recruiters[]
+    experiences  experiences[]
+}
+
+model jobs_applicants {
+    job_id       Int
+    applicant_id Int
+    applicant    candidates @relation(fields: [applicant_id], references: [id])
+    job          jobs       @relation(fields: [job_id], references: [id])
+
+    @@id([job_id, applicant_id], map: "pk_jobs_applicants")
+}
+
+model jobs_skills {
+    job_id   Int
+    skill_id Int
+    job      jobs   @relation(fields: [job_id], references: [id])
+    skill    skills @relation(fields: [skill_id], references: [id])
+
+    @@id([job_id, skill_id], map: "pk_jobs_skills")
+}
+
+model recruiters {
+    id            Int        @id(map: "pk_recruiters") @default(autoincrement())
+    username      String     @db.VarChar(50)
+    password      String     @db.VarChar(100)
+    avatar        String?    @db.VarChar(1000)
+    background    String?    @db.VarChar(1000)
+    addressWallet String     @unique @db.VarChar(100)
+    full_name     String?    @db.VarChar(100)
+    email         String?    @db.VarChar(100)
+    phone         String?    @db.VarChar(100)
+    company_id    Int?
+    position      String?    @db.VarChar(100)
+    role          roles
+    company       companies? @relation(fields: [company_id], references: [id])
+    jobs          jobs[]
+}
+
+model resumes {
+    id        Int        @id(map: "pk_resumes") @default(autoincrement())
+    data      String     @db.VarChar(100)
+    owner_id  Int
+    title     String?    @db.VarChar(100)
+    create_at DateTime   @db.Timestamp(6)
+    owner     candidates @relation(fields: [owner_id], references: [id])
+}
+
+model skills {
+    id                Int                 @id(map: "pk_skills") @default(autoincrement())
+    name              String              @db.VarChar(100)
+    candidates_skills candidates_skills[]
+    jobs_skills       jobs_skills[]
+}
+
+model certificates {
+    id           Int        @id(map: "pk_certificates") @default(autoincrement())
+    name         String     @db.VarChar(100)
+    verified_at  DateTime   @db.Timestamp(6)
+    candidate_id Int
+    candidate    candidates @relation(fields: [candidate_id], references: [id])
+}
+
+model fields {
+    id          Int     @id(map: "pk_jobs_types") @default(autoincrement())
+    name        String  @db.VarChar(100)
+    description String? @db.VarChar(5000)
+    jobs        jobs[]
+}
+
+model locations {
+    id        Int         @id(map: "pk_locations") @default(autoincrement())
+    name      String      @db.VarChar(100)
+    companies companies[]
+    jobs      jobs[]
+}
